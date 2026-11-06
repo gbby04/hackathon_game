@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://dkjb57d6ut2o0"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_4xypc"]
+load_path = "res://.godot/imported/scientist1_frontwalk.png-423fd9b8697726d92a85f1c18433b1f1.ctex"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2eqoi"]
+atlas = SubResource("CompressedTexture2D_4xypc")
+region = Rect2(0, 0, 235, 235)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rv3yx"]
+atlas = SubResource("CompressedTexture2D_4xypc")
+region = Rect2(235, 0, 235, 235)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hhoad"]
+atlas = SubResource("CompressedTexture2D_4xypc")
+region = Rect2(470, 0, 235, 235)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_62yky"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2eqoi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rv3yx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hhoad")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mm1bc"]
+radius = 11.0
+
+[node name="CharacterBody2D" type="CharacterBody2D" unique_id=517352309]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=127910256]
+sprite_frames = SubResource("SpriteFrames_62yky")
+frame_progress = 0.93115795
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1851483952]
+position = Vector2(6, 5)
+shape = SubResource("CircleShape2D_mm1bc")
