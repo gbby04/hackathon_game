@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://0bjn8l32c51u"
+path="res://.godot/imported/girl1_idle_front.aseprite-75a92ee22b7f466d95ceb0047ff9416a.res"
+
+[deps]
+
+source_file="res://assets/Characters/Idle/girl1_idle_front.aseprite"
+dest_files=["res://.godot/imported/girl1_idle_front.aseprite-75a92ee22b7f466d95ceb0047ff9416a.res"]
+
+[params]
+

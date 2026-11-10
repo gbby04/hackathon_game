@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://bas0gm40dilqe"
+path="res://.godot/imported/Down.aseprite-23b13e29a65cb344faba1b836838c4b8.res"
+
+[deps]
+
+source_file="res://assets/Characters/Walk/Down.aseprite"
+dest_files=["res://.godot/imported/Down.aseprite-23b13e29a65cb344faba1b836838c4b8.res"]
+
+[params]
+

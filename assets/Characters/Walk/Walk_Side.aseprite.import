@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://c6qr6bwirbtao"
+path="res://.godot/imported/Walk_Side.aseprite-39bf7dfa6e349b1c277c153c4c1d44f6.res"
+
+[deps]
+
+source_file="res://assets/Characters/Walk/Walk_Side.aseprite"
+dest_files=["res://.godot/imported/Walk_Side.aseprite-39bf7dfa6e349b1c277c153c4c1d44f6.res"]
+
+[params]
+

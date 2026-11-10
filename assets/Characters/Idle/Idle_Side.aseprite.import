@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://b7xyfsuq6ndke"
+path="res://.godot/imported/Idle_Side.aseprite-eb16aa07788b15e957cd95979c0858bc.res"
+
+[deps]
+
+source_file="res://assets/Characters/Idle/Idle_Side.aseprite"
+dest_files=["res://.godot/imported/Idle_Side.aseprite-eb16aa07788b15e957cd95979c0858bc.res"]
+
+[params]
+

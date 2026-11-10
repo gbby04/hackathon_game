@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://bc2xh63nxllio"
+path="res://.godot/imported/girl1_walk_back.aseprite-d4497574883892928671c167b25a4dd8.res"
+
+[deps]
+
+source_file="res://assets/Characters/Walk/girl1_walk_back.aseprite"
+dest_files=["res://.godot/imported/girl1_walk_back.aseprite-d4497574883892928671c167b25a4dd8.res"]
+
+[params]
+
