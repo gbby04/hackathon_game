@@ -1,0 +1,132 @@
+
+{
+  "dataset_version": "1.0",
+  "dataset_type": "fictional_gameplay",
+  "description": "Simplified fictional spacecraft parts for Space Vault.",
+  "default_budget_credits": 1000,
+  "components": [
+	{
+	  "id": "engine_basic",
+	  "name": "Basic Thruster",
+	  "category": "engine",
+	  "description": "A lightweight engine with limited propulsion.",
+	  "mass_kg": 80,
+	  "power_w": 20,
+	  "cost_credits": 100,
+	  "thrust_kn": 20
+	},
+	{
+	  "id": "engine_advanced",
+	  "name": "Advanced Thruster",
+	  "category": "engine",
+	  "description": "A heavier engine with greater thrust.",
+	  "mass_kg": 150,
+	  "power_w": 35,
+	  "cost_credits": 220,
+	  "thrust_kn": 60
+	},
+	{
+	  "id": "battery_standard",
+	  "name": "Standard Battery",
+	  "category": "battery",
+	  "description": "Stores a small amount of electrical energy.",
+	  "mass_kg": 20,
+	  "power_w": 0,
+	  "cost_credits": 60,
+	  "battery_wh": 100
+	},
+	{
+	  "id": "battery_large",
+	  "name": "High-Capacity Battery",
+	  "category": "battery",
+	  "description": "Stores more energy but adds mass.",
+	  "mass_kg": 50,
+	  "power_w": 0,
+	  "cost_credits": 130,
+	  "battery_wh": 300
+	},
+	{
+	  "id": "solar_small",
+	  "name": "Small Solar Panel",
+	  "category": "solar",
+	  "description": "Generates electricity while exposed to sunlight.",
+	  "mass_kg": 15,
+	  "power_w": 0,
+	  "cost_credits": 50,
+	  "solar_generation_w": 60
+	},
+	{
+	  "id": "solar_advanced",
+	  "name": "Advanced Solar Array",
+	  "category": "solar",
+	  "description": "Produces more electricity in sunlight.",
+	  "mass_kg": 40,
+	  "power_w": 0,
+	  "cost_credits": 120,
+	  "solar_generation_w": 160
+	},
+	{
+	  "id": "scanner_basic",
+	  "name": "Basic Science Camera",
+	  "category": "scanner",
+	  "description": "Collects basic scientific observations.",
+	  "mass_kg": 10,
+	  "power_w": 20,
+	  "cost_credits": 60,
+	  "science_score": 30,
+	  "data_mb_per_min": 2
+	},
+	{
+	  "id": "scanner_advanced",
+	  "name": "Advanced Science Scanner",
+	  "category": "scanner",
+	  "description": "Collects higher-value observations but requires more power.",
+	  "mass_kg": 45,
+	  "power_w": 80,
+	  "cost_credits": 180,
+	  "science_score": 90,
+	  "data_mb_per_min": 8
+	},
+	{
+	  "id": "comm_basic",
+	  "name": "Basic Radio",
+	  "category": "communication",
+	  "description": "A low-power communication system.",
+	  "mass_kg": 10,
+	  "power_w": 15,
+	  "cost_credits": 50,
+	  "downlink_mb_per_min": 3
+	},
+	{
+	  "id": "comm_advanced",
+	  "name": "High-Speed Transmitter",
+	  "category": "communication",
+	  "description": "Transmits data faster but consumes more power.",
+	  "mass_kg": 25,
+	  "power_w": 45,
+	  "cost_credits": 130,
+	  "downlink_mb_per_min": 12
+	},
+	{
+	  "id": "fuel_small",
+	  "name": "Small Fuel Tank",
+	  "category": "fuel",
+	  "description": "A lightweight tank containing a small propellant supply.",
+	  "mass_kg": 80,
+	  "power_w": 0,
+	  "cost_credits": 70,
+	  "propellant_kg": 60
+	},
+	{
+	  "id": "fuel_large",
+	  "name": "Large Fuel Tank",
+	  "category": "fuel",
+	  "description": "Carries more propellant but increases launch mass.",
+	  "mass_kg": 180,
+	  "power_w": 0,
+	  "cost_credits": 140,
+	  "propellant_kg": 150
+	}
+  ]
+}
+  

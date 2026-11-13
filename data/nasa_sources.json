@@ -1,0 +1,38 @@
+
+{
+  "dataset_name": "Space Vault NASA Reference Data",
+  "version": "1.0",
+  "description": "Verified NASA reference values and mission engineering resources.",
+  "sources": [
+	{
+	  "id": "nasa_earth",
+	  "title": "NASA Earth Fact Sheet",
+	  "organisation": "NASA",
+	  "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
+	  "type": "numerical_reference",
+	  "game_usage": "Earth gravity for the launch engineering calculation",
+	  "values": {
+		"surface_gravity_m_s2": 9.82,
+		"escape_velocity_km_s": 11.186,
+		"mean_radius_km": 6371.0,
+		"solar_irradiance_w_m2": 1361.0
+	  }
+	},
+	{
+	  "id": "nasa_mission_design",
+	  "title": "Design and Develop Science Missions",
+	  "organisation": "NASA",
+	  "url": "https://www.nasa.gov/smallsat-institute/",
+	  "type": "engineering_reference",
+	  "game_usage": "Mission design stages and launch, space, ground, and user segments",
+	  "note": "Source presentation supplied by the team, dated March 26, 2025. The URL is a NASA resource hub rather than a direct link to this PDF."
+	}
+  ],
+  "game_assumptions": {
+	"component_statistics": "Fictional prototype values stored in components.json",
+	"eclipse_duration": "35-minute gameplay scenario",
+	"launch_mass_limit": "500 kg fictional gameplay limit",
+	"budget": "1000 fictional credits",
+	"communication_window": "6-minute gameplay scenario"
+  }
+}
