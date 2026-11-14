@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cdoeskmx1wn15"
-path="res://.godot/imported/nasa.png-aa308a364e319f328694c926a9702e68.ctex"
+uid="uid://caqkccra3pg16"
+path="res://.godot/imported/loki_idle_back-Sheet.png-59e153fd5a97f4baf99d4e6fe6f1985b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/Nasa/nasa.png"
-dest_files=["res://.godot/imported/nasa.png-aa308a364e319f328694c926a9702e68.ctex"]
+source_file="res://assets/Characters/Idle/loki_idle_back-Sheet.png"
+dest_files=["res://.godot/imported/loki_idle_back-Sheet.png-59e153fd5a97f4baf99d4e6fe6f1985b.ctex"]
 
 [params]
 
