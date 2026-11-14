@@ -1,13 +1,13 @@
 extends Area2D
-
 class_name Door
 
-@export var destination_level_log: String
+@export_file("*.tscn") var destination_level_log: String
 @export var destination_door_tag: String
-@export var spawn_direction = "up"
+@export var spawn_direction: String = "left"
 
-@onready var spawn = $Spawn
+@onready var spawn: Marker2D = $Spawn
 
-func _on_body_entered(body):
-	if body is AnimationPlayer:
-		pass
+func _on_body_entered(body: Node2D) -> void:
+	print("Entered door: ", body.name) # Check the Output panel at the bottom when testing!
+	if body is CharacterBody2D:
+		get_tree().call_deferred("change_scene_to_file", destination_level_log)

@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://cs667c0y1yrev" path="res://assets/Characters/Idle/girl1_idle_front-Sheet.png" id="1_d4rsq"]
 [ext_resource type="Texture2D" uid="uid://du3c2y8r5wff0" path="res://assets/Characters/Idle/girl1_idle_back-Sheet.png" id="1_jetl1"]
+[ext_resource type="Script" uid="uid://6gthe8gh4e24" path="res://scenes/girl.gd" id="1_vlhqa"]
 [ext_resource type="Texture2D" uid="uid://dvsp1m1q3bap6" path="res://assets/Characters/Idle/girl1_idle_side-Sheet.png" id="2_vlhqa"]
 [ext_resource type="Texture2D" uid="uid://bd7toyf05pexp" path="res://assets/Characters/Walk/girl1_walk_front-Sheet.png" id="4_46dis"]
 [ext_resource type="Texture2D" uid="uid://fnip8fdmbs8t" path="res://assets/Characters/Walk/girl1_walk_side-Sheet.png" id="5_y2l78"]
@@ -253,7 +254,8 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_4kxuq"]
 radius = 5.0
 
-[node name="CharacterBody2D" type="CharacterBody2D" unique_id=901010531]
+[node name="gabby" type="CharacterBody2D" unique_id=901010531]
+script = ExtResource("1_vlhqa")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=441059592]
 position = Vector2(-1, -16)

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://pdlwbmjw5184"]
 
 [ext_resource type="Texture2D" uid="uid://npi43beacga8" path="res://assets/Characters/Idle/sofia_idle_front-Sheet.png" id="1_dxefo"]
+[ext_resource type="Script" uid="uid://borucy0vxpoab" path="res://scenes/sofia.gd" id="1_jel1b"]
 [ext_resource type="Texture2D" uid="uid://bivh31dq4htyn" path="res://assets/Characters/Idle/sofia_idle_side-Sheet.png" id="2_jel1b"]
 [ext_resource type="Texture2D" uid="uid://docje3wlhrc0d" path="res://assets/Characters/Idle/sofia_idle_back-Sheet.png" id="3_e28yo"]
 [ext_resource type="Texture2D" uid="uid://dlqxd2ffb3sve" path="res://assets/Characters/Walk/sofia_walk_front-Sheet.png" id="4_nf72i"]
@@ -253,7 +254,8 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_4kxuq"]
 radius = 6.0
 
-[node name="CharacterBody2D" type="CharacterBody2D" unique_id=649185823]
+[node name="celine" type="CharacterBody2D" unique_id=649185823]
+script = ExtResource("1_jel1b")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=124840685]
 position = Vector2(-1, -16)

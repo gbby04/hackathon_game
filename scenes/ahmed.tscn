@@ -297,7 +297,7 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_4kxuq"]
 radius = 7.0
 
-[node name="loki" type="CharacterBody2D" unique_id=700124158]
+[node name="ahmed" type="CharacterBody2D" unique_id=700124158]
 script = SubResource("GDScript_ia2hl")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=238685249]

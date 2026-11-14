@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://mfi5lcan8t5m"]
+
+[ext_resource type="Script" uid="uid://cn1iv2yfqqc26" path="res://scenes/matcha.gd" id="1_r3oig"]
+[ext_resource type="Texture2D" uid="uid://dcr6suustdhrl" path="res://assets/Characters/matcha_idle-Sheet.png" id="2_6d6h0"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qeimi"]
+atlas = ExtResource("2_6d6h0")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3x4h5"]
+atlas = ExtResource("2_6d6h0")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cccc7"]
+atlas = ExtResource("2_6d6h0")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1o5sx"]
+atlas = ExtResource("2_6d6h0")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n805m"]
+atlas = ExtResource("2_6d6h0")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3uvf6"]
+atlas = ExtResource("2_6d6h0")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_su5lk"]
+atlas = ExtResource("2_6d6h0")
+region = Rect2(384, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_4kxuq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qeimi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3x4h5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cccc7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1o5sx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n805m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3uvf6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_su5lk")
+}],
+"loop": 1,
+"name": &"fly",
+"speed": 12.0
+}]
+
+[node name="matcha" type="CharacterBody2D" unique_id=633063783]
+script = ExtResource("1_r3oig")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1245840116]
+position = Vector2(-1.9999998, -9)
+scale = Vector2(0.69335943, 0.6152344)
+sprite_frames = SubResource("SpriteFrames_4kxuq")
+animation = &"fly"
+frame_progress = 0.58113647
+metadata/_aseprite_wizard_interface_config_ = {
+"layer_section": false,
+"output_section": false,
+"pending_changes": {
+"embed_tex": true,
+"layers": [],
+"o_ex_p": "",
+"o_folder": "",
+"o_name": "",
+"only_visible": false,
+"scale": "1.0",
+"should_round_fps": true,
+"slice": "",
+"source": "",
+"source_uid": -1
+}
+}
