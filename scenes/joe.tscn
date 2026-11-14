@@ -254,14 +254,14 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_4kxuq"]
 radius = 6.0
 
-[node name="CharacterBody2D" type="CharacterBody2D" unique_id=1509061719]
+[node name="joe" type="CharacterBody2D" unique_id=1509061719]
 script = ExtResource("1_iqjfl")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1307885926]
 position = Vector2(2.3841858e-07, -13.000001)
 scale = Vector2(0.9023438, 0.82421875)
 sprite_frames = SubResource("SpriteFrames_4kxuq")
-animation = &"idle_down"
+animation = &"walk_side"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=326314526]
 position = Vector2(0, -11)
