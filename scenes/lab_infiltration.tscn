@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://cl8jbbhddywdr"]
+
+[ext_resource type="Script" uid="uid://cyoubhxrfkq47" path="res://scenes/lab_infiltration.gd" id="1_xfwt3"]
+
+[node name="LabInfiltration" type="Node2D" unique_id=2034372901]
+script = ExtResource("1_xfwt3")
+
+[node name="LabInfiltration" type="Control" parent="." unique_id=1513713509]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="LabInfiltration" unique_id=52185217]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 640.0
+offset_bottom = 360.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
