@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://ljggaeh6wcbl"]
+
+[ext_resource type="Script" uid="uid://de6l633ijrv5t" path="res://Main menu/node_2d.gd" id="1_epypp"]
+[ext_resource type="Texture2D" uid="uid://oowx7dtfvwpv" path="res://Main menu/MainMenu.jpeg" id="1_wtcfe"]
+[ext_resource type="FontFile" uid="uid://de2bebdo5bspt" path="res://Main menu/PixelifySans-Bold.ttf" id="3_q6r6c"]
+[ext_resource type="FontFile" uid="uid://dby6wldd528ol" path="res://Main menu/PixelifySans-Medium.ttf" id="4_kdubu"]
+[ext_resource type="FontFile" uid="uid://xa5mj0ukdl5j" path="res://Main menu/PressStart2P-Regular.ttf" id="4_q6r6c"]
+
+[node name="Node2D" type="Control" unique_id=1101410994]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_epypp")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=254053320]
+layout_mode = 0
+offset_right = 164.0
+offset_bottom = 91.0
+scale = Vector2(1.0117271, 1.0045786)
+texture = ExtResource("1_wtcfe")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1630838173]
+texture_filter = 1
+layout_mode = 0
+offset_left = 9.0
+offset_top = 24.0
+offset_right = 171.0
+offset_bottom = 102.0
+scale = Vector2(0.54840446, 0.55673105)
+theme_override_constants/separation = -2
+
+[node name="Title" type="Label" parent="VBoxContainer" unique_id=539676565]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.81960785, 0.4, 1)
+theme_override_fonts/font = ExtResource("3_q6r6c")
+theme_override_font_sizes/font_size = 25
+text = "SPACE VAULT: "
+
+[node name="subtitle" type="Label" parent="VBoxContainer" unique_id=1724436017]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.49019608, 0.9529412, 0.9882353, 1)
+theme_override_fonts/font = ExtResource("4_kdubu")
+theme_override_font_sizes/font_size = 16
+text = "Escape From Space"
+
+[node name="Control" type="Control" parent="VBoxContainer" unique_id=2100668733]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="Button" type="Button" parent="VBoxContainer" unique_id=1153552746]
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9843137, 0.33333334, 0.14117648, 1)
+theme_override_fonts/font = ExtResource("4_q6r6c")
+theme_override_font_sizes/font_size = 6
+text = "> CLICK TO START <"
+flat = true
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=257620134]
+position = Vector2(87, 48)
+zoom = Vector2(3, 3)
