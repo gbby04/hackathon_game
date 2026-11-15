@@ -1,9 +1,16 @@
 ~ path_locked
-Player: Oh no! I heard someone's calling us, who is it?
+Joe Peng: Hmm?
+Joe Peng: I heard someone's calling.
+Joe Peng: Who's there?
+???: Zip Zab Zup!!
+Joe Peng: Let's go check.
 => END
 
 ~ rubble_matcha
-Player: There's something trapped under the rubble!
-Matcha: Squeak! Phew, thanks for saving me!
+Joe Peng: There's something trapped under the rubble!
+???: Zip Zab Zup.
+???: Squeak! Thanks for saving me!
+Matcha: I am Matcha. I will be your companion for the rest of your life!!!
+Joe Peng: *shocks*
 set Global.found_matcha = true
 => END

@@ -261,7 +261,7 @@ script = ExtResource("1_6pg5r")
 position = Vector2(-1.1920929e-07, -20)
 scale = Vector2(0.9166667, 0.875)
 sprite_frames = SubResource("SpriteFrames_4kxuq")
-animation = &"walk_up"
+animation = &"walk_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1214036408]
 position = Vector2(1, -13)

@@ -261,11 +261,11 @@ script = ExtResource("1_iqjfl")
 position = Vector2(2.3841858e-07, -13.000001)
 scale = Vector2(0.9023438, 0.82421875)
 sprite_frames = SubResource("SpriteFrames_4kxuq")
-animation = &"walk_side"
+animation = &"idle_side"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=326314526]
 position = Vector2(0, -11)
 shape = SubResource("CircleShape2D_4kxuq")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1708523001]
-zoom = Vector2(2, 2)
+zoom = Vector2(1.5, 1.5)
