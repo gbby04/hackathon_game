@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cqetv3lr8x3m6"]
+
+[ext_resource type="Script" uid="uid://dwohffrqav76d" path="res://scripts/spacecraft/LaunchPreflightGate.gd" id="1_c4yqe"]
+
+[node name="EscapeLaunch" type="Control" unique_id=698517172]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_c4yqe")

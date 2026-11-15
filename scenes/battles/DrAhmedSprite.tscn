@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://med1ujjtsgqh"]
+
+[ext_resource type="Texture2D" uid="uid://cxeym5y4ny2ns" path="res://assets/battles/characters/scientists/dr_ahmed.png" id="1_ctf37"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j7ixk"]
+atlas = ExtResource("1_ctf37")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kjb0t"]
+atlas = ExtResource("1_ctf37")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_77on1"]
+atlas = ExtResource("1_ctf37")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x645e"]
+atlas = ExtResource("1_ctf37")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1d0mh"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j7ixk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kjb0t")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_77on1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x645e")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 4.0
+}]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" unique_id=771666370]
+scale = Vector2(3, 3)
+sprite_frames = SubResource("SpriteFrames_1d0mh")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.34718376

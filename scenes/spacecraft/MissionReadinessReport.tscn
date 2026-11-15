@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cyhughhjspois"]
+
+[ext_resource type="Script" uid="uid://iyytlscwsi21" path="res://scripts/spacecraft/MissionReadinessReport.gd" id="1_h1p0b"]
+
+[node name="MissionReadinessReport" type="Control" unique_id=1547419150]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_h1p0b")

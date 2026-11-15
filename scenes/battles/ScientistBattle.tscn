@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://bv0dnqfjb1ab5"]
+
+[ext_resource type="Script" uid="uid://clwuq0skyggx5" path="res://scripts/battles/ScientistBattle.gd" id="1_pd1j8"]
+
+[node name="ScientistBattle" type="Control" unique_id=1716843178]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pd1j8")

@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://do5q00gqcuyve"]
+
+[ext_resource type="Script" uid="uid://0qo0cxr8hhfk" path="res://scripts/story/StorySequence.gd" id="1_n6eph"]
+
+[node name="StorySequence" type="Control" unique_id=464801026]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_n6eph")

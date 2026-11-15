@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://djxq3i2qm7gds"]
+
+[ext_resource type="Script" uid="uid://cecseracpjqtd" path="res://scripts/spacecraft/EscapeDialogue.gd" id="1_ustyd"]
+[ext_resource type="Script" uid="uid://bb5rvxxqacvqa" path="res://RocketFlyby.gd" id="2_kcj2d"]
+
+[node name="EscapeDialogue" type="Control" unique_id=527510135]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_ustyd")
+
+[node name="RocketFlyby" type="Node2D" parent="." unique_id=2135771874]
+script = ExtResource("2_kcj2d")

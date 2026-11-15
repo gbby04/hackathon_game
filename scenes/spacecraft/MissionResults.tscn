@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dyf3mmxn2v7e5"]
+
+[ext_resource type="Script" uid="uid://col2oifkoyy0u" path="res://scripts/spacecraft/MissionResults.gd" id="1_k15si"]
+
+[node name="MissionResults" type="Control" unique_id=1369517587]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_k15si")

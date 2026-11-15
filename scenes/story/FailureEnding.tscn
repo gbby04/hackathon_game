@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://n7ll1vs0ek5h"]
+
+[ext_resource type="Script" uid="uid://732a661ntnj5" path="res://scripts/story/FailureEnding.gd" id="1_ee4hp"]
+
+[node name="FailureEnding" type="Control" unique_id=1653281342]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_ee4hp")

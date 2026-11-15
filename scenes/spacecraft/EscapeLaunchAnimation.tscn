@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://c5metkkq56xo2"]
+
+[ext_resource type="Script" uid="uid://bmbltnyvr8jy5" path="res://scripts/spacecraft/EscapeLaunch.gd" id="1_c4yqe"]
+[ext_resource type="Script" uid="uid://dh142f36edt61" path="res://scripts/spacecraft/LaunchDebriefBridge.gd" id="2_yo7y4"]
+
+[node name="EscapeLaunchAnimation" type="Control" unique_id=698517172]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_c4yqe")
+
+[node name="LaunchDebriefBridge" type="Node" parent="." unique_id=1133164837]
+script = ExtResource("2_yo7y4")

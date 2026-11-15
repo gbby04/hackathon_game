@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cln27a0axtknh"]
 
 [ext_resource type="Script" uid="uid://crammsqujbc8a" path="res://scripts/spacecraft/ShipBuilder.gd" id="1_51drb"]
+[ext_resource type="Script" uid="uid://dxdj2847rtr8d" path="res://scripts/spacecraft/MissionReportButton.gd" id="2_aqbyv"]
 
 [node name="ShipBuilder" type="Control" unique_id=2001353193]
 layout_mode = 3
@@ -10,3 +11,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_51drb")
+
+[node name="MissionButtonReport" type="Button" parent="." unique_id=375617302]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+script = ExtResource("2_aqbyv")
