@@ -1,625 +1,1467 @@
 
 extends Control
 
-# SPACE VAULT - B-MO SHIP BUILDER
-# Step 7 - Shared State Integration
+# SPACE VAULT - ROCKET ASSEMBLY
 # Godot 4.7
+#
+# PREVIEW -> CONFIRM -> EQUIP
+#
+# Selecting a part previews its effects.
+# Confirm installs or removes it.
+# Cancel restores the existing ship.
+# After confirmation, red/green changes disappear.
+#
+# No additional scenes or scripts required.
 
-const BG_COLOR = Color("#101827")
-const PANEL_COLOR = Color("#1d293b")
-const BUTTON_COLOR = Color("#304157")
-const SELECTED_COLOR = Color("#155e75")
-const TEXT_COLOR = Color("#edf6ff")
-const MUTED_COLOR = Color("#a6bad3")
-const ACCENT_COLOR = Color("#67e8f9")
-const SUCCESS_COLOR = Color("#86efac")
-const WARNING_COLOR = Color("#fbbf24")
+signal close_requested
 
-const CATEGORIES = [
-	"engine",
-	"battery",
-	"solar",
-	"scanner",
-	"communication",
-    "fuel"
+const BG: Color = Color("#091524")
+const HEADER: Color = Color("#10243a")
+const CARD: Color = Color("#162940")
+const CARD_HOVER: Color = Color("#243e59")
+const BORDER: Color = Color("#29445c")
+const TEXT_MAIN: Color = Color("#eaf6ff")
+const TEXT_MUTED: Color = Color("#a5b9cc")
+const ACCENT: Color = Color("#50d4e8")
+const SELECTED: Color = Color("#176f91")
+const GOOD: Color = Color("#7deda4")
+const BAD: Color = Color("#ff8a8a")
+const NEUTRAL: Color = Color("#99aabe")
+const WARNING: Color = Color("#ffca70")
+
+const CATEGORIES: Array[Dictionary] = [
+	{"name": "Engine", "key": "engine"},
+	{"name": "Battery", "key": "battery"},
+	{"name": "Solar Panel", "key": "solar"},
+	{"name": "Science Scanner", "key": "scanner"},
+	{"name": "Communication", "key": "communication"},
+	{"name": "Fuel Tank", "key": "fuel"}
 ]
 
-const CATEGORY_NAMES = {
-	"engine": "Engine",
-	"battery": "Battery",
-	"solar": "Solar Panel",
-	"scanner": "Science Scanner",
-	"communication": "Communication",
-	"fuel": "Fuel Tank"
-}
+const STAT_ROWS: Array[Dictionary] = [
+	{
+		"name": "MASS",
+		"key": "mass_kg",
+		"unit": "kg",
+		"lower": true
+	},
+	{
+		"name": "POWER",
+		"key": "power_w",
+		"unit": "W",
+		"lower": true
+	},
+	{
+		"name": "BATTERY",
+		"key": "battery_wh",
+		"unit": "Wh",
+		"lower": false
+	},
+	{
+		"name": "SOLAR",
+		"key": "solar_generation_w",
+		"unit": "W",
+		"lower": false
+	},
+	{
+		"name": "COST",
+		"key": "cost_credits",
+		"unit": "cr",
+		"lower": true
+	},
+	{
+		"name": "BUDGET",
+		"key": "budget_remaining",
+		"unit": "cr",
+		"lower": false
+	},
+	{
+		"name": "SCIENCE",
+		"key": "science_score",
+		"unit": "",
+		"lower": false
+	},
+	{
+		"name": "THRUST",
+		"key": "thrust_kn",
+		"unit": "kN",
+		"lower": false
+	},
+	{
+		"name": "DOWNLINK",
+		"key": "downlink_mb_per_min",
+		"unit": "MB/m",
+		"lower": false
+	}
+]
 
-var selected_category: String = "engine"
+const COMPONENT_STAT_KEYS: Array[String] = [
+	"mass_kg",
+	"power_w",
+	"cost_credits",
+	"battery_wh",
+	"solar_generation_w",
+	"science_score",
+	"science_data_mb_per_min",
+	"downlink_mb_per_min",
+	"data_storage_mb",
+	"propellant_kg",
+    "thrust_kn"
+]
 
-var category_list: VBoxContainer
-var component_list: VBoxContainer
-var stats_list: VBoxContainer
+
+# ==========================================
+# ROCKET PREVIEW CONTROL
+# ==========================================
+
+class RocketPreview:
+	extends Control
+
+	var equipment: Dictionary = {}
+
+	func update_rocket(
+		new_equipment: Dictionary
+	) -> void:
+		equipment = new_equipment.duplicate(true)
+		queue_redraw()
+
+
+	func _has_part(category: String) -> bool:
+		return not str(
+			equipment.get(category, "")
+		).is_empty()
+
+
+	func _draw() -> void:
+		var outline: Color = Color("#50687f")
+		var hull: Color = Color("#8cc7d7")
+		var light: Color = Color("#d9f3f5")
+		var dark: Color = Color("#2a506c")
+
+		var count: int = 0
+
+		for category in equipment.keys():
+			if _has_part(str(category)):
+				count += 1
+
+		# Assembly guide
+		draw_line(
+			Vector2(52, 6),
+			Vector2(52, 168),
+			Color("#29445c"),
+			1.0
+		)
+
+		# Rocket outline
+		draw_line(
+			Vector2(35, 45),
+			Vector2(52, 12),
+			outline,
+			2.0
+		)
+
+		draw_line(
+			Vector2(52, 12),
+			Vector2(69, 45),
+			outline,
+			2.0
+		)
+
+		draw_rect(
+			Rect2(35, 45, 34, 88),
+			outline,
+			false,
+			2.0
+		)
+
+		draw_line(
+			Vector2(35, 100),
+			Vector2(17, 122),
+			outline,
+			2.0
+		)
+
+		draw_line(
+			Vector2(69, 100),
+			Vector2(87, 122),
+			outline,
+			2.0
+		)
+
+		# Body appears once a part is installed.
+		if count > 0:
+			draw_rect(
+				Rect2(37, 47, 30, 84),
+				hull
+			)
+
+			draw_rect(
+				Rect2(42, 49, 7, 80),
+				light
+			)
+
+			draw_rect(
+				Rect2(61, 47, 6, 84),
+				dark
+			)
+
+		# Science scanner: nose section
+		if _has_part("scanner"):
+			var nose: PackedVector2Array = (
+				PackedVector2Array([
+					Vector2(52, 12),
+					Vector2(35, 45),
+					Vector2(69, 45)
+				])
+			)
+
+			draw_colored_polygon(nose, light)
+
+			draw_line(
+				Vector2(52, 12),
+				Vector2(35, 45),
+				dark,
+				2.0
+			)
+
+			draw_line(
+				Vector2(52, 12),
+				Vector2(69, 45),
+				dark,
+				2.0
+			)
+
+		# Fuel tank
+		if _has_part("fuel"):
+			draw_rect(
+				Rect2(42, 77, 20, 40),
+				Color("#5b86a8")
+			)
+
+			draw_rect(
+				Rect2(43, 85, 18, 3),
+				Color("#c5e2ea")
+			)
+
+			draw_rect(
+				Rect2(43, 105, 18, 3),
+				Color("#c5e2ea")
+			)
+
+		# Battery
+		if _has_part("battery"):
+			draw_rect(
+				Rect2(43, 57, 18, 12),
+				Color("#e1c25c")
+			)
+
+			draw_rect(
+				Rect2(50, 59, 4, 8),
+				Color("#f8ecae")
+			)
+
+		# Solar panels
+		if _has_part("solar"):
+			draw_rect(
+				Rect2(9, 77, 25, 36),
+				Color("#357caa")
+			)
+
+			draw_rect(
+				Rect2(70, 77, 25, 36),
+				Color("#357caa")
+			)
+
+			for index in range(3):
+				var line_x: float = (
+					13.0 + float(index) * 8.0
+				)
+
+				draw_line(
+					Vector2(line_x, 79),
+					Vector2(line_x, 111),
+					Color("#9bd0e6"),
+					1.0
+				)
+
+				draw_line(
+					Vector2(line_x + 61, 79),
+					Vector2(line_x + 61, 111),
+					Color("#9bd0e6"),
+					1.0
+				)
+
+		# Communication antenna
+		if _has_part("communication"):
+			draw_line(
+				Vector2(68, 57),
+				Vector2(87, 45),
+				Color("#a9e8ee"),
+				2.0
+			)
+
+			draw_circle(
+				Vector2(87, 45),
+				4.0,
+				Color("#72e9d3")
+			)
+
+		# Engine
+		if _has_part("engine"):
+			draw_rect(
+				Rect2(41, 132, 22, 12),
+				Color("#70849c")
+			)
+
+			draw_rect(
+				Rect2(45, 144, 14, 7),
+				Color("#49596c")
+			)
+
+			draw_colored_polygon(
+				PackedVector2Array([
+					Vector2(45, 151),
+					Vector2(52, 168),
+					Vector2(59, 151)
+				]),
+				Color("#ffb85d")
+			)
+
+			draw_colored_polygon(
+				PackedVector2Array([
+					Vector2(49, 151),
+					Vector2(52, 162),
+					Vector2(55, 151)
+				]),
+				Color("#fff0aa")
+			)
+
+
+# ==========================================
+# STATE
+# ==========================================
+
+var current_category: String = "engine"
+
+# Pending selection has NOT been equipped yet.
+var pending_component_id: String = ""
+var pending_category: String = ""
+var pending_remove: bool = false
+
+var database: ComponentDatabase
+
+var category_container: VBoxContainer
+var parts_container: VBoxContainer
+
+var equipped_label: Label
 var message_label: Label
+var assembly_label: Label
+
+var confirm_button: Button
+var cancel_button: Button
+
+var preview: RocketPreview
+var stat_labels: Dictionary = {}
 
 
 func _ready() -> void:
-	if not SpacecraftGameState.spacecraft.database.loaded:
-		push_error("Component database could not load.")
-		return
+	custom_minimum_size = Vector2(640, 360)
 
-	_build_interface()
-	_refresh_all()
-
-	SpacecraftGameState.equipment_changed.connect(
-		_on_spacecraft_updated
-	)
-
-	SpacecraftGameState.inventory_changed.connect(
-		_on_inventory_updated
-	)
-
-	_check_engineering_warnings()
-
-
-func _build_interface() -> void:
 	set_anchors_and_offsets_preset(
 		Control.PRESET_FULL_RECT
 	)
 
-	var background: ColorRect = ColorRect.new()
-	background.color = BG_COLOR
-	background.set_anchors_and_offsets_preset(
-		Control.PRESET_FULL_RECT
-	)
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(background)
+	database = SpacecraftGameState.spacecraft.database
 
-	var margin: MarginContainer = MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(
-		Control.PRESET_FULL_RECT
-	)
+	_build_interface()
+	_refresh_all()
 
-	margin.add_theme_constant_override(
-		"margin_left", 10
-	)
-	margin.add_theme_constant_override(
-		"margin_right", 10
-	)
-	margin.add_theme_constant_override(
-		"margin_top", 8
-	)
-	margin.add_theme_constant_override(
-		"margin_bottom", 8
-	)
-	add_child(margin)
 
-	var main_layout: VBoxContainer = VBoxContainer.new()
-	main_layout.add_theme_constant_override(
-		"separation", 8
-	)
-	margin.add_child(main_layout)
+# ==========================================
+# STYLE HELPERS
+# ==========================================
 
-	# HEADER
-	var header: HBoxContainer = HBoxContainer.new()
-	main_layout.add_child(header)
+func _style(
+	background: Color,
+	border: Color = BORDER
+) -> StyleBoxFlat:
+	var result: StyleBoxFlat = StyleBoxFlat.new()
 
-	var title: Label = _make_label(
-		"B-MO  //  SHIP BUILDER",
-		20,
-		ACCENT_COLOR
-	)
-	title.size_flags_horizontal = (
-		Control.SIZE_EXPAND_FILL
-	)
-	header.add_child(title)
+	result.bg_color = background
+	result.border_color = border
+	result.set_border_width_all(1)
+	result.set_corner_radius_all(4)
 
-	var online_label: Label = _make_label(
-		"SYSTEM ONLINE",
-		12,
-		SUCCESS_COLOR
-	)
-	header.add_child(online_label)
+	return result
 
-	# THREE MAIN PANELS
-	var content: HBoxContainer = HBoxContainer.new()
-	content.size_flags_vertical = (
-		Control.SIZE_EXPAND_FILL
-	)
-	content.add_theme_constant_override(
-		"separation", 8
-	)
-	main_layout.add_child(content)
 
-	# LEFT - CATEGORIES
-	var category_panel: VBoxContainer = _create_panel(
-		content,
-		"COMPONENTS",
-		165
+func _panel(
+	at: Vector2,
+	dimensions: Vector2,
+	colour: Color
+) -> Panel:
+	var result: Panel = Panel.new()
+
+	result.position = at
+	result.size = dimensions
+
+	result.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE
 	)
 
-	var category_scroll: ScrollContainer = (
-		ScrollContainer.new()
-	)
-	category_scroll.size_flags_vertical = (
-		Control.SIZE_EXPAND_FILL
-	)
-	category_panel.add_child(category_scroll)
-
-	category_list = VBoxContainer.new()
-	category_list.size_flags_horizontal = (
-		Control.SIZE_EXPAND_FILL
-	)
-	category_list.add_theme_constant_override(
-		"separation", 5
-	)
-	category_scroll.add_child(category_list)
-
-	# MIDDLE - AVAILABLE PARTS
-	var parts_panel: VBoxContainer = _create_panel(
-		content,
-		"AVAILABLE PARTS",
-		210
-	)
-
-	var parts_scroll: ScrollContainer = (
-		ScrollContainer.new()
-	)
-	parts_scroll.size_flags_vertical = (
-		Control.SIZE_EXPAND_FILL
-	)
-	parts_panel.add_child(parts_scroll)
-
-	component_list = VBoxContainer.new()
-	component_list.size_flags_horizontal = (
-		Control.SIZE_EXPAND_FILL
-	)
-	component_list.add_theme_constant_override(
-		"separation", 6
-	)
-	parts_scroll.add_child(component_list)
-
-	# RIGHT - SHIP STATS
-	var stats_panel: VBoxContainer = _create_panel(
-		content,
-		"SHIP STATISTICS",
-		210
-	)
-
-	var stats_scroll: ScrollContainer = (
-		ScrollContainer.new()
-	)
-	stats_scroll.size_flags_vertical = (
-		Control.SIZE_EXPAND_FILL
-	)
-	stats_panel.add_child(stats_scroll)
-
-	stats_list = VBoxContainer.new()
-	stats_list.size_flags_horizontal = (
-		Control.SIZE_EXPAND_FILL
-	)
-	stats_list.add_theme_constant_override(
-		"separation", 4
-	)
-	stats_scroll.add_child(stats_list)
-
-	# BOTTOM STATUS PANEL
-	var status_panel: PanelContainer = (
-		PanelContainer.new()
-	)
-	status_panel.add_theme_stylebox_override(
+	result.add_theme_stylebox_override(
 		"panel",
-		_make_style(Color("#153e52"))
-	)
-	main_layout.add_child(status_panel)
-
-	var status_margin: MarginContainer = (
-		MarginContainer.new()
-	)
-	status_margin.add_theme_constant_override(
-		"margin_left", 10
-	)
-	status_margin.add_theme_constant_override(
-		"margin_right", 10
-	)
-	status_margin.add_theme_constant_override(
-		"margin_top", 6
-	)
-	status_margin.add_theme_constant_override(
-		"margin_bottom", 6
-	)
-	status_panel.add_child(status_margin)
-
-	message_label = _make_label(
-		"B-MO: Systems ready.",
-		12,
-		TEXT_COLOR
-	)
-	message_label.autowrap_mode = (
-		TextServer.AUTOWRAP_WORD_SMART
-	)
-	status_margin.add_child(message_label)
-
-
-func _create_panel(
-	parent: Control,
-	heading: String,
-	panel_width: float
-) -> VBoxContainer:
-
-	var panel: PanelContainer = PanelContainer.new()
-	panel.custom_minimum_size.x = panel_width
-	panel.size_flags_horizontal = (
-		Control.SIZE_EXPAND_FILL
-	)
-	panel.add_theme_stylebox_override(
-		"panel",
-		_make_style(PANEL_COLOR)
-	)
-	parent.add_child(panel)
-
-	var outer_margin: MarginContainer = (
-		MarginContainer.new()
-	)
-	outer_margin.add_theme_constant_override(
-		"margin_left", 8
-	)
-	outer_margin.add_theme_constant_override(
-		"margin_right", 8
-	)
-	outer_margin.add_theme_constant_override(
-		"margin_top", 8
-	)
-	outer_margin.add_theme_constant_override(
-		"margin_bottom", 8
-	)
-	panel.add_child(outer_margin)
-
-	var layout: VBoxContainer = VBoxContainer.new()
-	layout.add_theme_constant_override(
-		"separation", 8
-	)
-	outer_margin.add_child(layout)
-
-	layout.add_child(
-		_make_label(heading, 12, ACCENT_COLOR)
+		_style(colour)
 	)
 
-	return layout
+	add_child(result)
+	return result
 
 
-func _make_style(color: Color) -> StyleBoxFlat:
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = color
-	style.set_corner_radius_all(5)
-	return style
-
-
-func _make_label(
+func _label(
 	value: String,
-	font_size: int = 13,
-	font_color: Color = TEXT_COLOR
+	at: Vector2,
+	dimensions: Vector2,
+	font_size: int = 10,
+	colour: Color = TEXT_MAIN
 ) -> Label:
+	var result: Label = Label.new()
 
-	var label: Label = Label.new()
-	label.text = value
-	label.add_theme_color_override(
-		"font_color",
-		font_color
+	result.text = value
+	result.position = at
+	result.size = dimensions
+
+	result.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE
 	)
-	label.add_theme_font_size_override(
+
+	result.add_theme_font_size_override(
 		"font_size",
 		font_size
 	)
-	return label
 
-
-func _make_button(
-	value: String,
-	selected: bool = false
-) -> Button:
-
-	var button: Button = Button.new()
-	button.text = value
-	button.custom_minimum_size.y = 30
-
-	button.add_theme_color_override(
+	result.add_theme_color_override(
 		"font_color",
-		TEXT_COLOR
+		colour
 	)
 
-	var normal_color: Color = BUTTON_COLOR
+	add_child(result)
+	return result
+
+
+func _style_button(
+	button: Button,
+	selected: bool = false
+) -> void:
+	var normal: Color = CARD_HOVER
 
 	if selected:
-		normal_color = SELECTED_COLOR
+		normal = SELECTED
 
 	button.add_theme_stylebox_override(
 		"normal",
-		_make_style(normal_color)
+		_style(normal)
 	)
+
 	button.add_theme_stylebox_override(
 		"hover",
-		_make_style(Color("#176783"))
+		_style(Color("#247e9e"), ACCENT)
 	)
+
 	button.add_theme_stylebox_override(
 		"pressed",
-		_make_style(Color("#0e7490"))
+		_style(Color("#125773"), ACCENT)
 	)
 
-	return button
+	button.add_theme_stylebox_override(
+		"disabled",
+		_style(Color("#28384a"))
+	)
+
+	button.add_theme_stylebox_override(
+		"focus",
+		StyleBoxEmpty.new()
+	)
+
+	for key in [
+		"font_color",
+		"font_hover_color",
+		"font_pressed_color",
+        "font_disabled_color"
+	]:
+		button.add_theme_color_override(
+			key,
+			TEXT_MAIN
+		)
+
+	button.add_theme_font_size_override(
+		"font_size",
+		10
+	)
 
 
-func _clear_container(container: Node) -> void:
+func _clear(container: Node) -> void:
 	for child in container.get_children():
 		container.remove_child(child)
 		child.queue_free()
 
 
+# ==========================================
+# BUILD INTERFACE
+# ==========================================
+
+func _build_interface() -> void:
+	var bg: ColorRect = ColorRect.new()
+	bg.color = BG
+	add_child(bg)
+
+	bg.set_anchors_and_offsets_preset(
+		Control.PRESET_FULL_RECT
+	)
+
+	bg.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE
+	)
+
+	# Header
+	_panel(
+		Vector2(8, 7),
+		Vector2(624, 51),
+		HEADER
+	)
+
+	_label(
+		"MATCHA // ROCKET ASSEMBLY",
+		Vector2(19, 14),
+		Vector2(325, 22),
+		16,
+		ACCENT
+	)
+
+	_label(
+		"BUILD JOE PENG'S ESCAPE SPACECRAFT",
+		Vector2(20, 38),
+		Vector2(315, 12),
+		9,
+		TEXT_MUTED
+	)
+
+	var back: Button = Button.new()
+	back.text = "BACK"
+	back.position = Vector2(522, 17)
+	back.size = Vector2(98, 31)
+
+	_style_button(back, true)
+
+	back.pressed.connect(_on_back_pressed)
+
+	add_child(back)
+
+	# Categories
+	_panel(
+		Vector2(8, 67),
+		Vector2(123, 244),
+		CARD
+	)
+
+	_label(
+		"COMPONENTS",
+		Vector2(16, 79),
+		Vector2(111, 18),
+		11,
+		ACCENT
+	)
+
+	category_container = VBoxContainer.new()
+	category_container.position = Vector2(15, 108)
+	category_container.size = Vector2(109, 190)
+
+	category_container.add_theme_constant_override(
+		"separation",
+		5
+	)
+
+	add_child(category_container)
+
+	# Available parts
+	_panel(
+		Vector2(139, 67),
+		Vector2(204, 244),
+		CARD
+	)
+
+	_label(
+		"AVAILABLE PARTS",
+		Vector2(148, 79),
+		Vector2(184, 18),
+		11,
+		ACCENT
+	)
+
+	equipped_label = _label(
+		"",
+		Vector2(148, 101),
+		Vector2(183, 18),
+		9,
+		GOOD
+	)
+
+	equipped_label.clip_text = true
+
+	# Shorter scrolling area leaves space
+	# for CONFIRM and CANCEL underneath.
+	var scroll: ScrollContainer = (
+		ScrollContainer.new()
+	)
+
+	scroll.position = Vector2(147, 122)
+	scroll.size = Vector2(188, 143)
+
+	scroll.horizontal_scroll_mode = (
+		ScrollContainer.SCROLL_MODE_DISABLED
+	)
+
+	add_child(scroll)
+
+	parts_container = VBoxContainer.new()
+
+	parts_container.size_flags_horizontal = (
+		Control.SIZE_EXPAND_FILL
+	)
+
+	parts_container.add_theme_constant_override(
+		"separation",
+		4
+	)
+
+	scroll.add_child(parts_container)
+
+	confirm_button = Button.new()
+	confirm_button.text = "CONFIRM"
+	confirm_button.position = Vector2(147, 274)
+	confirm_button.size = Vector2(91, 27)
+
+	_style_button(confirm_button, true)
+
+	confirm_button.pressed.connect(
+		_confirm_selection
+	)
+
+	add_child(confirm_button)
+
+	cancel_button = Button.new()
+	cancel_button.text = "CANCEL"
+	cancel_button.position = Vector2(244, 274)
+	cancel_button.size = Vector2(91, 27)
+
+	_style_button(cancel_button)
+
+	cancel_button.pressed.connect(
+		_cancel_selection
+	)
+
+	add_child(cancel_button)
+
+	# Rocket preview
+	_panel(
+		Vector2(350, 67),
+		Vector2(110, 244),
+		CARD
+	)
+
+	_label(
+		"ROCKET",
+		Vector2(361, 79),
+		Vector2(88, 17),
+		11,
+		ACCENT
+	)
+
+	assembly_label = _label(
+		"0 / 6 PARTS",
+		Vector2(358, 100),
+		Vector2(94, 19),
+		10,
+		WARNING
+	)
+
+	assembly_label.horizontal_alignment = (
+		HORIZONTAL_ALIGNMENT_CENTER
+	)
+
+	preview = RocketPreview.new()
+	preview.position = Vector2(353, 121)
+	preview.size = Vector2(104, 175)
+
+	preview.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE
+	)
+
+	add_child(preview)
+
+	# Ship statistics
+	_panel(
+		Vector2(467, 67),
+		Vector2(165, 244),
+		CARD
+	)
+
+	_label(
+		"SHIP STATS",
+		Vector2(476, 79),
+		Vector2(148, 19),
+		11,
+		ACCENT
+	)
+
+	var row_y: float = 108.0
+
+	for entry in STAT_ROWS:
+		var key: String = str(entry["key"])
+
+		_label(
+			str(entry["name"]),
+			Vector2(475, row_y),
+			Vector2(61, 15),
+			8,
+			TEXT_MUTED
+		)
+
+		var value_label: Label = _label(
+			"0",
+			Vector2(531, row_y),
+			Vector2(62, 15),
+			8,
+			TEXT_MAIN
+		)
+
+		value_label.horizontal_alignment = (
+			HORIZONTAL_ALIGNMENT_RIGHT
+		)
+
+		var delta_label: Label = _label(
+			"—",
+			Vector2(595, row_y),
+			Vector2(29, 15),
+			8,
+			NEUTRAL
+		)
+
+		delta_label.horizontal_alignment = (
+			HORIZONTAL_ALIGNMENT_RIGHT
+		)
+
+		stat_labels[key] = {
+			"value": value_label,
+			"delta": delta_label,
+			"unit": str(entry["unit"]),
+			"lower": bool(entry["lower"])
+		}
+
+		row_y += 19.0
+
+	_label(
+		"ASSEMBLY STATUS",
+		Vector2(476, 283),
+		Vector2(145, 16),
+		9,
+		ACCENT
+	)
+
+	# Matcha dialogue
+	_panel(
+		Vector2(8, 318),
+		Vector2(624, 34),
+		HEADER
+	)
+
+	message_label = _label(
+		"",
+		Vector2(18, 329),
+		Vector2(607, 16),
+		10,
+		TEXT_MAIN
+	)
+
+
+# ==========================================
+# CATEGORY SELECTION
+# ==========================================
+
 func _refresh_all() -> void:
 	_refresh_categories()
-	_refresh_components()
+	_refresh_parts()
 	_refresh_stats()
+	_refresh_rocket()
+	_refresh_confirmation_buttons()
+
+	_message(
+        "MATCHA: Good day, sir. Shall we assemble our escape plan?"
+	)
 
 
 func _refresh_categories() -> void:
-	_clear_container(category_list)
+	_clear(category_container)
 
 	for category in CATEGORIES:
-		var category_id: String = str(category)
-		var display_name: String = str(
-			CATEGORY_NAMES[category_id]
-		)
-		var is_selected: bool = (
-			category_id == selected_category
+		var key: String = str(
+			category["key"]
 		)
 
-		var button: Button = _make_button(
-			display_name,
-			is_selected
+		var button: Button = Button.new()
+		button.text = str(category["name"])
+		button.custom_minimum_size = (
+			Vector2(0, 27)
 		)
-		category_list.add_child(button)
+
+		_style_button(
+			button,
+			key == current_category
+		)
+
 		button.pressed.connect(
-			_on_category_selected.bind(category_id)
+			_select_category.bind(key)
 		)
 
+		category_container.add_child(button)
 
-func _refresh_components() -> void:
-	_clear_container(component_list)
+
+func _select_category(category: String) -> void:
+	# Switching categories cancels any
+	# unconfirmed selection.
+	_clear_pending()
+
+	current_category = category
+
+	_refresh_categories()
+	_refresh_parts()
+	_refresh_stats()
+	_refresh_rocket()
+	_refresh_confirmation_buttons()
+
+	_message(
+        "MATCHA: Reviewing %s systems, sir. Choose carefully."
+		% category
+	)
+
+
+func _get_equipped_id(
+	category: String
+) -> String:
+	return SpacecraftGameState.get_equipped_component(
+		category
+	)
+
+
+# ==========================================
+# PART CARDS
+# ==========================================
+
+func _refresh_parts() -> void:
+	_clear(parts_container)
+
+	var equipped_id: String = (
+		_get_equipped_id(current_category)
+	)
+
+	var equipped_part: Dictionary = {}
+
+	if not equipped_id.is_empty():
+		equipped_part = database.get_component(
+			equipped_id
+		)
+
+	equipped_label.text = (
+        "EQUIPPED: %s"
+		% str(equipped_part.get("name", "None"))
+	)
 
 	var components: Array = (
-		SpacecraftGameState.get_available_components(
-			selected_category
+		database.get_components_by_category(
+			current_category
 		)
 	)
 
-	var equipped: Dictionary = (
-		SpacecraftGameState.get_equipped_component(
-			selected_category
+	for value in components:
+		if not value is Dictionary:
+			continue
+
+		var part: Dictionary = value
+
+		var id: String = str(
+			part.get("id", "")
 		)
-	)
 
-	var equipped_name: String = str(
-		equipped.get("name", "None")
-	)
-
-	var equipped_label: Label = _make_label(
-		"EQUIPPED: " + equipped_name,
-		11,
-		SUCCESS_COLOR
-	)
-	equipped_label.autowrap_mode = (
-		TextServer.AUTOWRAP_WORD_SMART
-	)
-	component_list.add_child(equipped_label)
-
-	if components.is_empty():
-		component_list.add_child(
-			_make_label("No unlocked parts.", 11)
-		)
-		return
-
-	for item in components:
-		var component: Dictionary = item
-
-		var component_id: String = str(
-			component.get("id", "")
-		)
-		var component_name: String = str(
-			component.get("name", "Unknown")
-		)
+		if id.is_empty():
+			continue
 
 		var is_equipped: bool = (
-			component_id == str(
-				equipped.get("id", "")
+			id == equipped_id
+		)
+
+		var is_pending: bool = (
+			pending_category == current_category
+			and pending_component_id == id
+		)
+
+		var unlocked: bool = (
+			SpacecraftGameState.is_component_unlocked(id)
+		)
+
+		var button: Button = Button.new()
+		button.custom_minimum_size = Vector2(0, 43)
+		button.text = ""
+
+		button.size_flags_horizontal = (
+			Control.SIZE_EXPAND_FILL
+		)
+
+		_style_button(
+			button,
+			is_pending or is_equipped
+		)
+
+		var title: String = str(
+			part.get("name", id)
+		)
+
+		var name_label: Label = Label.new()
+		name_label.text = title
+		name_label.position = Vector2(6, 3)
+		name_label.size = Vector2(132, 14)
+		name_label.clip_text = true
+		name_label.mouse_filter = (
+			Control.MOUSE_FILTER_IGNORE
+		)
+
+		name_label.add_theme_font_size_override(
+			"font_size",
+			9
+		)
+
+		name_label.add_theme_color_override(
+			"font_color",
+			TEXT_MAIN
+		)
+
+		button.add_child(name_label)
+
+		var status: Label = Label.new()
+		status.position = Vector2(137, 3)
+		status.size = Vector2(43, 14)
+
+		status.horizontal_alignment = (
+			HORIZONTAL_ALIGNMENT_RIGHT
+		)
+
+		status.mouse_filter = (
+			Control.MOUSE_FILTER_IGNORE
+		)
+
+		status.add_theme_font_size_override(
+			"font_size",
+			8
+		)
+
+		if is_pending:
+			status.text = (
+				"REMOVE" if pending_remove
+				else "PREVIEW"
 			)
-		)
-
-		var button_text: String = component_name
-
-		if is_equipped:
-			button_text += " [EQUIPPED]"
-
-		var button: Button = _make_button(
-			button_text,
-			is_equipped
-		)
-		button.add_theme_font_size_override(
-			"font_size", 11
-		)
-		component_list.add_child(button)
-
-		button.pressed.connect(
-			_on_component_selected.bind(
-				component_id
+			status.add_theme_color_override(
+				"font_color",
+				WARNING
 			)
-		)
 
-		var details: String = (
-            "Mass: %.0f kg | Power: %.0f W\n"
-			+ "Cost: %.0f credits"
+		elif is_equipped:
+			status.text = "ON"
+			status.add_theme_color_override(
+				"font_color",
+				GOOD
+			)
+
+		elif unlocked:
+			status.text = "SELECT"
+			status.add_theme_color_override(
+				"font_color",
+				ACCENT
+			)
+
+		else:
+			status.text = "LOCK"
+			status.add_theme_color_override(
+				"font_color",
+				NEUTRAL
+			)
+
+		button.add_child(status)
+
+		var info: Label = Label.new()
+		info.text = (
+            "%.0f kg | %.0f W | %.0f cr"
 		) % [
-			float(component.get("mass_kg", 0)),
-			float(component.get("power_w", 0)),
-			float(component.get("cost_credits", 0))
+			float(part.get("mass_kg", 0.0)),
+			float(part.get("power_w", 0.0)),
+			float(part.get("cost_credits", 0.0))
 		]
 
-		component_list.add_child(
-			_make_label(details, 11, MUTED_COLOR)
+		info.position = Vector2(6, 19)
+		info.size = Vector2(174, 13)
+
+		info.mouse_filter = (
+			Control.MOUSE_FILTER_IGNORE
+		)
+
+		info.add_theme_font_size_override(
+			"font_size",
+			8
+		)
+
+		info.add_theme_color_override(
+			"font_color",
+			TEXT_MUTED
+		)
+
+		button.add_child(info)
+
+		var hint: Label = Label.new()
+		hint.position = Vector2(6, 32)
+		hint.size = Vector2(174, 10)
+		hint.mouse_filter = (
+			Control.MOUSE_FILTER_IGNORE
+		)
+
+		hint.add_theme_font_size_override(
+			"font_size",
+			8
+		)
+
+		if is_pending:
+			hint.text = "Awaiting confirmation"
+			hint.add_theme_color_override(
+				"font_color",
+				WARNING
+			)
+
+		elif is_equipped:
+			hint.text = "Select to preview removal"
+			hint.add_theme_color_override(
+				"font_color",
+				GOOD
+			)
+
+		else:
+			hint.text = "Select to compare"
+			hint.add_theme_color_override(
+				"font_color",
+				TEXT_MUTED
+			)
+
+		button.add_child(hint)
+
+		if unlocked:
+			button.pressed.connect(
+				_select_part.bind(id)
+			)
+		else:
+			button.disabled = true
+
+		parts_container.add_child(button)
+
+
+# ==========================================
+# PENDING SELECTION
+# ==========================================
+
+func _select_part(
+	component_id: String
+) -> void:
+	var equipped_id: String = (
+		_get_equipped_id(current_category)
+	)
+
+	pending_category = current_category
+	pending_component_id = component_id
+
+	# Selecting the installed part
+	# means the player wants to remove it.
+	pending_remove = (
+		component_id == equipped_id
+	)
+
+	_refresh_parts()
+	_refresh_stats()
+	_refresh_rocket()
+	_refresh_confirmation_buttons()
+
+	var part: Dictionary = (
+		database.get_component(component_id)
+	)
+
+	if pending_remove:
+		_message(
+            "MATCHA: Remove %s, sir? Confirm when ready."
+			% str(part.get("name", component_id))
+		)
+	else:
+		_message(
+            "MATCHA: Previewing %s, sir. Review the figures before confirming."
+			% str(part.get("name", component_id))
 		)
 
 
-func _refresh_stats() -> void:
-	_clear_container(stats_list)
+func _clear_pending() -> void:
+	pending_component_id = ""
+	pending_category = ""
+	pending_remove = false
 
+
+func _refresh_confirmation_buttons() -> void:
+	var has_selection: bool = (
+		not pending_component_id.is_empty()
+	)
+
+	confirm_button.disabled = not has_selection
+	cancel_button.disabled = not has_selection
+
+	if not has_selection:
+		confirm_button.text = "CONFIRM"
+
+	elif pending_remove:
+		confirm_button.text = "REMOVE"
+
+	else:
+		confirm_button.text = "CONFIRM"
+
+
+# ==========================================
+# PREVIEW CALCULATIONS
+# ==========================================
+
+func _get_preview_stats() -> Dictionary:
 	var stats: Dictionary = (
 		SpacecraftGameState.get_ship_stats()
+	).duplicate(true)
+
+	if pending_component_id.is_empty():
+		return stats
+
+	var equipped_id: String = (
+		_get_equipped_id(pending_category)
 	)
 
-	_add_stat(
-		"TOTAL MASS",
-		"%.1f kg" % float(stats["mass_kg"])
-	)
-	_add_stat(
-		"POWER CONSUMPTION",
-		"%.1f W" % float(stats["power_w"])
-	)
-	_add_stat(
-		"BATTERY CAPACITY",
-		"%.1f Wh" % float(stats["battery_wh"])
-	)
-	_add_stat(
-		"SOLAR GENERATION",
-		"%.1f W" % float(stats["solar_generation_w"])
-	)
-	_add_stat(
-		"TOTAL COST",
-		"%.0f credits" % float(stats["cost_credits"])
-	)
-	_add_stat(
-		"BUDGET REMAINING",
-		"%.0f" % float(stats["budget_remaining"])
-	)
-	_add_stat(
-		"SCIENCE SCORE",
-		"%.0f" % float(stats["science_score"])
-	)
-	_add_stat(
-		"ENGINE THRUST",
-		"%.1f kN" % float(stats["thrust_kn"])
-	)
-	_add_stat(
-		"DOWNLINK",
-		"%.1f MB/min" % float(
-			stats["downlink_mb_per_min"]
+	var old_part: Dictionary = {}
+
+	if not equipped_id.is_empty():
+		old_part = database.get_component(
+			equipped_id
 		)
-	)
 
+	var new_part: Dictionary = {}
 
-func _add_stat(
-	stat_name: String,
-	stat_value: String
-) -> void:
-
-	var row: HBoxContainer = HBoxContainer.new()
-	stats_list.add_child(row)
-
-	var name_label: Label = _make_label(
-		stat_name,
-		10,
-		MUTED_COLOR
-	)
-	name_label.size_flags_horizontal = (
-		Control.SIZE_EXPAND_FILL
-	)
-	row.add_child(name_label)
-
-	var value_label: Label = _make_label(
-		stat_value,
-		11,
-		TEXT_COLOR
-	)
-	row.add_child(value_label)
-
-
-func _on_category_selected(category: String) -> void:
-	selected_category = category
-	_refresh_categories()
-	_refresh_components()
-
-	message_label.text = (
-        "B-MO: Viewing "
-		+ str(CATEGORY_NAMES[category])
-		+ " components."
-	)
-
-
-func _on_component_selected(component_id: String) -> void:
-	var component: Dictionary = (
-		SpacecraftGameState.spacecraft.database.get_component(
-			component_id
+	if not pending_remove:
+		new_part = database.get_component(
+			pending_component_id
 		)
+
+	# Adjust only the category being previewed.
+	for key in COMPONENT_STAT_KEYS:
+		var old_value: float = float(
+			old_part.get(key, 0.0)
+		)
+
+		var new_value: float = float(
+			new_part.get(key, 0.0)
+		)
+
+		stats[key] = (
+			float(stats.get(key, 0.0))
+			- old_value
+			+ new_value
+		)
+
+	var max_budget: float = (
+		SpacecraftManager.MAX_BUDGET
 	)
 
-	if component.is_empty():
+	stats["budget_remaining"] = (
+		max_budget
+		- float(stats["cost_credits"])
+	)
+
+	stats["within_budget"] = (
+		float(stats["cost_credits"]) <= max_budget
+	)
+
+	var equipment: Dictionary = (
+		_get_preview_equipment()
+	)
+
+	var count: int = 0
+
+	for category in equipment.keys():
+		if not str(equipment[category]).is_empty():
+			count += 1
+
+	stats["equipped_count"] = count
+	stats["complete"] = (count == 6)
+
+	return stats
+
+
+func _get_preview_equipment() -> Dictionary:
+	var equipment: Dictionary = (
+		SpacecraftGameState.get_equipped_components()
+	)
+
+	if not pending_component_id.is_empty():
+		equipment[pending_category] = (
+			"" if pending_remove
+			else pending_component_id
+		)
+
+	return equipment
+
+
+# ==========================================
+# CONFIRM OR CANCEL
+# ==========================================
+
+func _confirm_selection() -> void:
+	if pending_component_id.is_empty():
 		return
 
-	var success: bool = (
-		SpacecraftGameState.equip_component(
-			component_id
-		)
+	var part: Dictionary = database.get_component(
+		pending_component_id
 	)
+
+	var part_name: String = str(
+		part.get("name", pending_component_id)
+	)
+
+	var success: bool = false
+
+	if pending_remove:
+		success = (
+			SpacecraftGameState.unequip_component(
+				pending_category
+			)
+		)
+
+	else:
+		success = (
+			SpacecraftGameState.equip_component(
+				pending_component_id
+			)
+		)
 
 	if not success:
-		message_label.text = (
-            "B-MO: This component is locked "
-			+ "or cannot be equipped."
+		_message(
+            "MATCHA: The change failed, sir. The current assembly is unchanged."
 		)
 		return
 
-	_refresh_components()
-	_check_engineering_warnings()
+	var was_removal: bool = pending_remove
 
+	# Clear the preview. All stat colours and
+	# change indicators return to neutral.
+	_clear_pending()
 
-func _on_spacecraft_updated(_stats: Dictionary) -> void:
+	_refresh_parts()
 	_refresh_stats()
+	_refresh_rocket()
+	_refresh_confirmation_buttons()
+
+	if was_removal:
+		_message(
+            "MATCHA: %s removed, sir. I have updated the assembly."
+			% part_name
+		)
+	else:
+		_message(
+            "MATCHA: %s installed, sir. A small but respectable step toward escape."
+			% part_name
+		)
 
 
-func _on_inventory_updated() -> void:
-	_refresh_components()
+func _cancel_selection() -> void:
+	if pending_component_id.is_empty():
+		return
+
+	_clear_pending()
+
+	_refresh_parts()
+	_refresh_stats()
+	_refresh_rocket()
+	_refresh_confirmation_buttons()
+
+	_message(
+        "MATCHA: Change cancelled, sir. A rare display of restraint."
+	)
 
 
-func _check_engineering_warnings() -> void:
-	var stats: Dictionary = (
+# ==========================================
+# SHIP STATISTICS
+# ==========================================
+
+func _refresh_stats() -> void:
+	var current_stats: Dictionary = (
 		SpacecraftGameState.get_ship_stats()
 	)
 
-	if not bool(stats["within_budget"]):
-		message_label.text = (
-            "B-MO WARNING: Build exceeds the budget!"
-		)
-		return
-
-	var eclipse_result: Dictionary = (
-		SpacecraftGameState.check_eclipse(35.0)
+	var shown_stats: Dictionary = (
+		_get_preview_stats()
 	)
 
-	if not bool(eclipse_result.get("success", false)):
-		message_label.text = (
-            "B-MO WARNING: Insufficient battery "
-			+ "energy for the eclipse!"
-		)
-		return
-
-	var launch_result: Dictionary = (
-		SpacecraftGameState.check_launch(500.0)
+	var is_previewing: bool = (
+		not pending_component_id.is_empty()
 	)
 
-	if not bool(launch_result.get("success", false)):
-		message_label.text = (
-            "B-MO WARNING: Launch requirements "
-			+ "are not satisfied!"
-		)
-		return
+	for key_value in stat_labels.keys():
+		var key: String = str(key_value)
+		var row: Dictionary = stat_labels[key]
 
-	message_label.text = (
-        "B-MO: Ship configuration updated. "
-		+ "Basic engineering checks passed."
+		var value_label: Label = row["value"]
+		var delta_label: Label = row["delta"]
+
+		var shown: float = float(
+			shown_stats.get(key, 0.0)
+		)
+
+		var current: float = float(
+			current_stats.get(key, 0.0)
+		)
+
+		var unit: String = str(row["unit"])
+
+		if key == "science_score":
+			value_label.text = "%d" % int(shown)
+
+		elif key == "downlink_mb_per_min":
+			value_label.text = (
+				"%.1f%s" % [shown, unit]
+			)
+
+		else:
+			value_label.text = (
+				"%.0f%s" % [shown, unit]
+			)
+
+		# After confirmation there are no
+		# red or green indicators.
+		if not is_previewing:
+			delta_label.text = "—"
+
+			delta_label.add_theme_color_override(
+				"font_color",
+				NEUTRAL
+			)
+
+			value_label.add_theme_color_override(
+				"font_color",
+				TEXT_MAIN
+			)
+
+			continue
+
+		var change: float = shown - current
+
+		delta_label.text = _format_delta(change)
+
+		var colour: Color = _delta_colour(
+			change,
+			bool(row["lower"])
+		)
+
+		delta_label.add_theme_color_override(
+			"font_color",
+			colour
+		)
+
+		value_label.add_theme_color_override(
+			"font_color",
+			TEXT_MAIN if absf(change) < 0.001
+			else colour
+		)
+
+
+func _format_delta(value: float) -> String:
+	if absf(value) < 0.001:
+		return "0"
+
+	if value > 0.0:
+		return "+%.0f" % value
+
+	return "%.0f" % value
+
+
+func _delta_colour(
+	change: float,
+	lower_is_better: bool
+) -> Color:
+	if absf(change) < 0.001:
+		return NEUTRAL
+
+	if lower_is_better:
+		return GOOD if change < 0.0 else BAD
+
+	return GOOD if change > 0.0 else BAD
+
+
+# ==========================================
+# ROCKET PREVIEW
+# ==========================================
+
+func _refresh_rocket() -> void:
+	var equipment: Dictionary = (
+		_get_preview_equipment()
 	)
+
+	preview.update_rocket(equipment)
+
+	var stats: Dictionary = (
+		_get_preview_stats()
+	)
+
+	var count: int = int(
+		stats.get("equipped_count", 0)
+	)
+
+	var previewing: bool = (
+		not pending_component_id.is_empty()
+	)
+
+	if previewing:
+		assembly_label.text = (
+			"%d / 6 PREVIEW" % count
+		)
+
+		assembly_label.add_theme_color_override(
+			"font_color",
+			WARNING
+		)
+
+	else:
+		assembly_label.text = (
+			"%d / 6 PARTS" % count
+		)
+
+		assembly_label.add_theme_color_override(
+			"font_color",
+			GOOD if count == 6
+			else WARNING
+		)
+
+
+# ==========================================
+# NAVIGATION AND MATCHA
+# ==========================================
+
+func _message(message: String) -> void:
+	message_label.text = message
+
+
+func _on_back_pressed() -> void:
+	# Discard unconfirmed equipment changes.
+	_clear_pending()
+	close_requested.emit()

@@ -2,126 +2,128 @@
 class_name MissionSimulation
 extends RefCounted
 
-# SPACE VAULT - ENGINEERING SIMULATION
-# Godot 4.7 - Member 2
+# SPACE VAULT - ENGINEERING SIMULATIONS
+# Godot 4.7
 #
-# NASA reference:
-# https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+# Simplified educational calculations.
+# Component specifications and challenge thresholds
+# are fictional gameplay parameters.
 #
-# Other mission parameters are fictional prototype
-# values unless identified as source-derived.
+# Earth's gravity: approximately 9.82 m/s^2.
+# NASA Earth Fact Sheet reference.
 
-const ECLIPSE_DURATION_MIN: float = 35.0
-const LAUNCH_MASS_LIMIT_KG: float = 500.0
-const MIN_INITIAL_TWR: float = 1.2
+# NASA values are loaded from res://data/nasa_sources.json via NASAData.
+# The thrust-to-weight threshold remains a fictional gameplay rule.
+const MIN_THRUST_TO_WEIGHT: float = 1.2
 
-const OBSERVATION_DURATION_MIN: float = 20.0
-const GROUND_CONTACT_MIN: float = 6.0
-const REQUIRED_SCIENCE_DATA_MB: float = 15.0
-
-var nasa: NASAData
+var nasa_reference: NASAData = NASAData.new()
 
 
-func _init() -> void:
-	nasa = NASAData.new()
+func _failed(
+	message: String
+) -> Dictionary:
+	return {
+		"valid": true,
+		"success": false,
+		"explanation": message
+	}
 
-
-# ==========================================
-# DR. WATT - ECLIPSE POWER CHECK
-# ==========================================
 
 func check_eclipse(
 	stats: Dictionary,
-	duration_minutes: float = ECLIPSE_DURATION_MIN
+	duration_minutes: float = 35.0
 ) -> Dictionary:
-
-	if duration_minutes < 0.0:
-		return _invalid_result(
-            "Invalid eclipse duration."
-		)
+	var battery_wh: float = float(
+		stats.get("battery_wh", 0.0)
+	)
 
 	var power_w: float = float(
 		stats.get("power_w", 0.0)
 	)
 
-	var battery_wh: float = float(
-		stats.get("battery_wh", 0.0)
+	if battery_wh <= 0.0:
+		return {
+			"valid": true,
+			"success": false,
+			"battery_percentage": 0.0,
+			"energy_required_wh": 0.0,
+			"battery_remaining_wh": 0.0,
+			"explanation":
+                "MATCHA: No battery equipped. "
+				+ "Install a battery before testing the eclipse."
+		}
+
+	if power_w <= 0.0:
+		return {
+			"valid": true,
+			"success": false,
+			"battery_percentage": 100.0,
+			"energy_required_wh": 0.0,
+			"battery_remaining_wh": battery_wh,
+			"explanation":
+                "MATCHA: No powered systems are installed. "
+				+ "Install equipment before the test."
+		}
+
+	if duration_minutes <= 0.0:
+		return {
+			"valid": false,
+			"success": false,
+			"explanation": "Invalid eclipse duration."
+		}
+
+	var required_wh: float = (
+		power_w * duration_minutes / 60.0
 	)
 
-	if power_w < 0.0 or battery_wh < 0.0:
-		return _invalid_result(
-            "Invalid power or battery value."
-		)
-
-	# Solar panels provide no power in full eclipse.
-	var duration_hours: float = duration_minutes / 60.0
-
-	var energy_needed_wh: float = (
-		power_w * duration_hours
-	)
-
+	# Solar generation is unavailable during eclipse.
 	var remaining_wh: float = (
-		battery_wh - energy_needed_wh
+		battery_wh - required_wh
 	)
 
-	var survived: bool = remaining_wh >= 0.0
+	var success: bool = remaining_wh >= 0.0
 
-	var battery_percentage: float = 0.0
-
-	if battery_wh > 0.0:
-		battery_percentage = clampf(
-			remaining_wh / battery_wh * 100.0,
-			0.0,
-			100.0
-		)
+	var remaining_percentage: float = clampf(
+		remaining_wh / battery_wh * 100.0,
+		0.0,
+		100.0
+	)
 
 	var explanation: String = ""
 
-	if survived:
+	if success:
 		explanation = (
-            "B-MO: Our battery survived the eclipse! "
-			+ "We still have %.1f Wh remaining."
-		) % remaining_wh
+            "Eclipse survived! %.1f Wh used, "
+			+ "%.1f Wh remaining."
+		) % [
+			required_wh,
+			remaining_wh
+		]
 	else:
 		explanation = (
-            "B-MO: SYSTEM BROWNOUT! "
-			+ "We need %.1f Wh more energy."
-		) % absf(remaining_wh)
+            "Battery depleted during eclipse! "
+			+ "Need %.1f Wh, have %.1f Wh."
+		) % [
+			required_wh,
+			battery_wh
+		]
 
 	return {
-		"success": survived,
 		"valid": true,
-		"boss": "Dr. Watt",
-		"attack": "Solar Eclipse Shadow",
-		"duration_min": duration_minutes,
+		"success": success,
+		"duration_minutes": duration_minutes,
 		"power_w": power_w,
-		"battery_wh": battery_wh,
-		"energy_needed_wh": energy_needed_wh,
-		"remaining_wh": remaining_wh,
-		"battery_percentage": battery_percentage,
+		"energy_required_wh": required_wh,
+		"battery_remaining_wh": remaining_wh,
+		"battery_percentage": remaining_percentage,
 		"explanation": explanation
 	}
 
 
-# ==========================================
-# DR. DELTA-V - LAUNCH CHECK
-# ==========================================
-
 func check_launch(
 	stats: Dictionary,
-	mass_limit_kg: float = LAUNCH_MASS_LIMIT_KG
+	mass_limit_kg: float = 500.0
 ) -> Dictionary:
-
-	if not nasa.loaded:
-		return _invalid_result(
-            "NASA reference data could not be loaded."
-		)
-
-	if mass_limit_kg <= 0.0:
-		return _invalid_result(
-            "Invalid launch mass limit."
-		)
-
 	var mass_kg: float = float(
 		stats.get("mass_kg", 0.0)
 	)
@@ -130,115 +132,129 @@ func check_launch(
 		stats.get("thrust_kn", 0.0)
 	)
 
-	var within_budget: bool = bool(
+	var fuel_kg: float = float(
+		stats.get("propellant_kg", 0.0)
+	)
+
+	var cost: float = float(
+		stats.get("cost_credits", 0.0)
+	)
+
+	var budget_ok: bool = bool(
 		stats.get("within_budget", false)
 	)
 
-	if mass_kg <= 0.0 or thrust_kn < 0.0:
-		return _invalid_result(
-            "Invalid spacecraft mass or thrust."
+	if mass_kg <= 0.0:
+		return _failed(
+            "MATCHA: The spacecraft has no mass. "
+			+ "Equip rocket components first."
 		)
 
-	# NASA's Earth Fact Sheet provides 9.82 m/s^2
-	# as Earth's mean surface gravity.
-	var gravity: float = nasa.get_surface_gravity()
-
-	if gravity <= 0.0:
-		return _invalid_result(
-            "Invalid NASA gravity reference."
+	if thrust_kn <= 0.0:
+		return _failed(
+            "MATCHA: No engine installed. "
+			+ "The rocket cannot launch."
 		)
 
-	var mass_margin_kg: float = (
-		mass_limit_kg - mass_kg
+	if fuel_kg <= 0.0:
+		return _failed(
+            "MATCHA: No propellant available. "
+			+ "Install a fuel tank."
+		)
+
+	if mass_limit_kg <= 0.0:
+		return {
+			"valid": false,
+			"success": false,
+			"explanation": "Invalid launch mass limit."
+		}
+
+	if not nasa_reference.loaded:
+		return {
+			"valid": false,
+			"success": false,
+			"explanation": "NASA dataset could not be loaded."
+		}
+
+	var earth_gravity: float = nasa_reference.get_surface_gravity()
+
+	if earth_gravity <= 0.0:
+		return {
+			"valid": false,
+			"success": false,
+			"explanation": "NASA Earth gravity reference unavailable."
+		}
+
+	var weight_newtons: float = (
+		mass_kg * earth_gravity
 	)
 
-	var within_mass_limit: bool = (
-		mass_margin_kg >= 0.0
-	)
-
-	# Convert kilonewtons to newtons.
-	var thrust_n: float = thrust_kn * 1000.0
-
-	var weight_n: float = (
-		mass_kg * gravity
+	var thrust_newtons: float = (
+		thrust_kn * 1000.0
 	)
 
 	var thrust_to_weight: float = (
-		thrust_n / weight_n
+		thrust_newtons / weight_newtons
 	)
 
-	var enough_thrust: bool = (
-		thrust_to_weight >= MIN_INITIAL_TWR
+	var mass_ok: bool = (
+		mass_kg <= mass_limit_kg
 	)
 
-	var passed: bool = (
-		within_mass_limit
-		and enough_thrust
-		and within_budget
+	var thrust_ok: bool = (
+		thrust_to_weight >= MIN_THRUST_TO_WEIGHT
+	)
+
+	var success: bool = (
+		mass_ok and thrust_ok and budget_ok
 	)
 
 	var explanation: String = ""
 
-	if not within_mass_limit:
+	if success:
 		explanation = (
-            "B-MO: We're %.1f kg over "
-			+ "the launch mass limit!"
-		) % absf(mass_margin_kg)
-	elif not enough_thrust:
-		explanation = (
-            "B-MO: Our initial thrust-to-weight "
-			+ "ratio is too low!"
-		)
-	elif not within_budget:
-		explanation = (
-            "B-MO: This spacecraft exceeds "
-			+ "our mission budget!"
-		)
+            "Launch check passed! Mass %.1f kg, "
+			+ "thrust-to-weight %.2f."
+		) % [
+			mass_kg,
+			thrust_to_weight
+		]
 	else:
-		explanation = (
-            "B-MO: Initial launch checks passed! "
-			+ "Mass, thrust and budget are acceptable."
-		)
+		var reasons: Array[String] = []
+
+		if not mass_ok:
+			reasons.append("Mass exceeds launch limit")
+
+		if not thrust_ok:
+			reasons.append("Insufficient thrust")
+
+		if not budget_ok:
+			reasons.append("Over budget")
+
+		explanation = "; ".join(reasons) + "."
 
 	return {
-		"success": passed,
 		"valid": true,
-		"boss": "Dr. Delta-V",
-		"attack": "Gravity Well Launch Check",
+		"success": success,
 		"mass_kg": mass_kg,
 		"mass_limit_kg": mass_limit_kg,
-		"mass_margin_kg": mass_margin_kg,
 		"thrust_kn": thrust_kn,
-		"surface_gravity_m_s2": gravity,
-		"gravity_source": "NASA Earth Fact Sheet",
 		"thrust_to_weight": thrust_to_weight,
-		"within_mass_limit": within_mass_limit,
-		"enough_thrust": enough_thrust,
-		"within_budget": within_budget,
+		"earth_gravity_m_s2": earth_gravity,
+		"earth_gravity_source": "nasa_earth",
+		"propellant_kg": fuel_kg,
+		"cost_credits": cost,
+		"within_budget": budget_ok,
 		"explanation": explanation
 	}
 
 
-# ==========================================
-# DR. DOWNLINK - COMMUNICATION CHECK
-# ==========================================
-
 func check_communications(
 	stats: Dictionary,
-	observation_minutes: float = OBSERVATION_DURATION_MIN,
-	contact_minutes: float = GROUND_CONTACT_MIN,
-	required_data_mb: float = REQUIRED_SCIENCE_DATA_MB
+	observation_minutes: float = 20.0,
+	contact_minutes: float = 6.0,
+	required_data_mb: float = 15.0
 ) -> Dictionary:
-
-	if (
-		observation_minutes < 0.0
-		or contact_minutes < 0.0
-		or required_data_mb < 0.0
-	):
-		return _invalid_result(
-            "Invalid communication duration or target."
-		)
-
 	var data_rate: float = float(
 		stats.get("science_data_mb_per_min", 0.0)
 	)
@@ -251,108 +267,130 @@ func check_communications(
 		stats.get("data_storage_mb", 0.0)
 	)
 
-	if (
-		data_rate < 0.0
-		or downlink_rate < 0.0
-		or storage_mb < 0.0
-	):
-		return _invalid_result(
-            "Invalid communication or storage values."
+	if data_rate <= 0.0:
+		return _failed(
+            "MATCHA: No science instrument installed. "
+			+ "There is no data to transmit."
 		)
 
-	var data_generated_mb: float = (
+	if downlink_rate <= 0.0:
+		return _failed(
+            "MATCHA: No communication module installed. "
+			+ "Data cannot be transmitted."
+		)
+
+	if (
+		observation_minutes <= 0.0
+		or contact_minutes <= 0.0
+		or required_data_mb <= 0.0
+	):
+		return {
+			"valid": false,
+			"success": false,
+			"explanation": "Invalid communications test settings."
+		}
+
+	var generated_mb: float = (
 		data_rate * observation_minutes
 	)
 
-	var data_stored_mb: float = minf(
-		data_generated_mb,
-		storage_mb
-	)
+	# In this simplified prototype, zero storage
+	# means there is no separately specified storage
+	# limit. The camera buffers its generated data.
+	var stored_mb: float = generated_mb
 
-	var data_lost_mb: float = maxf(
-		data_generated_mb - storage_mb,
-		0.0
-	)
+	if storage_mb > 0.0:
+		stored_mb = minf(
+			generated_mb,
+			storage_mb
+		)
 
-	var downlink_capacity_mb: float = (
+	var transmitted_mb: float = minf(
+		stored_mb,
 		downlink_rate * contact_minutes
 	)
 
-	var data_returned_mb: float = minf(
-		data_stored_mb,
-		downlink_capacity_mb
-	)
-
-	var passed: bool = (
-		data_returned_mb >= required_data_mb
+	var success: bool = (
+		transmitted_mb >= required_data_mb
 	)
 
 	var explanation: String = ""
 
-	if passed:
+	if success:
 		explanation = (
-            "B-MO: Transmission successful! "
-			+ "%.1f MB of data reached our receiver."
-		) % data_returned_mb
+            "Transmission successful! "
+			+ "%.1f MB delivered."
+		) % transmitted_mb
 	else:
-		var missing_mb: float = (
-			required_data_mb - data_returned_mb
-		)
-
 		explanation = (
-            "B-MO: Incomplete transmission! "
-			+ "We still need %.1f MB of data."
-		) % missing_mb
+            "Insufficient downlink! "
+			+ "%.1f MB delivered; %.1f MB required."
+		) % [
+			transmitted_mb,
+			required_data_mb
+		]
 
 	return {
-		"success": passed,
 		"valid": true,
-		"boss": "Dr. Downlink",
-		"attack": "Ground Pass Bottleneck",
-		"data_generated_mb": data_generated_mb,
-		"data_stored_mb": data_stored_mb,
-		"data_lost_mb": data_lost_mb,
-		"downlink_capacity_mb": downlink_capacity_mb,
-		"data_returned_mb": data_returned_mb,
+		"success": success,
+		"generated_data_mb": generated_mb,
+		"stored_data_mb": stored_mb,
+		"transmitted_data_mb": transmitted_mb,
 		"required_data_mb": required_data_mb,
-		"storage_mb": storage_mb,
+		"contact_minutes": contact_minutes,
 		"explanation": explanation
 	}
 
 
-# ==========================================
-# COMPLETE ENGINEERING EVALUATION
-# ==========================================
-
-func evaluate_mission(stats: Dictionary) -> Dictionary:
-	var eclipse: Dictionary = check_eclipse(stats)
-	var launch: Dictionary = check_launch(stats)
-	var communications: Dictionary = (
-		check_communications(stats)
+func evaluate_mission(
+	stats: Dictionary
+) -> Dictionary:
+	var count: int = int(
+		stats.get("equipped_count", 0)
 	)
 
-	var passed: bool = (
+	if count < 6:
+		return {
+			"valid": true,
+			"success": false,
+			"explanation":
+                "MATCHA: Spacecraft incomplete. "
+				+ "Equip all six component categories.",
+			"equipped_count": count
+		}
+
+	var eclipse: Dictionary = (
+		check_eclipse(stats, 35.0)
+	)
+
+	var launch: Dictionary = (
+		check_launch(stats, 500.0)
+	)
+
+	var communications: Dictionary = (
+		check_communications(
+			stats,
+			20.0,
+			6.0,
+			15.0
+		)
+	)
+
+	var success: bool = (
 		bool(eclipse.get("success", false))
 		and bool(launch.get("success", false))
 		and bool(communications.get("success", false))
 	)
 
 	return {
-		"success": passed,
+		"valid": true,
+		"success": success,
 		"eclipse": eclipse,
 		"launch": launch,
 		"communications": communications,
 		"explanation": (
-            "All engineering checks passed!"
-			if passed
+            "All engineering readiness checks passed!"
+			if success
 			else "One or more engineering checks failed."
 		)
-	}
-
-
-func _invalid_result(reason: String) -> Dictionary:
-	return {
-		"success": false,
-		"valid": false,
-		"explanation": reason
 	}

@@ -2,24 +2,34 @@
 class_name SpacecraftManager
 extends RefCounted
 
+# SPACE VAULT - SPACECRAFT MANAGER
+# Godot 4.7
+#
+# Spacecraft begins with no equipped components.
+# All engineering statistics come from equipped parts.
+
 signal spacecraft_updated(stats: Dictionary)
 
-const BASE_STRUCTURE_MASS_KG = 120.0
-const BASE_SYSTEM_POWER_W = 40.0
-const BASE_STRUCTURE_COST = 100.0
-const BASE_DATA_STORAGE_MB = 200.0
+const MAX_BUDGET: float = 1000.0
 
-const MAX_BUDGET = 1000.0
+const CATEGORIES: Array[String] = [
+	"engine",
+	"battery",
+	"solar",
+	"scanner",
+	"communication",
+    "fuel"
+]
 
 var database: ComponentDatabase
 
 var equipped_components: Dictionary = {
-	"engine": "engine_basic",
-	"battery": "battery_standard",
-	"solar": "solar_small",
-	"scanner": "scanner_basic",
-	"communication": "comm_basic",
-	"fuel": "fuel_small"
+	"engine": "",
+	"battery": "",
+	"solar": "",
+	"scanner": "",
+	"communication": "",
+	"fuel": ""
 }
 
 
@@ -28,126 +38,170 @@ func _init() -> void:
 
 
 func equip_component(component_id: String) -> bool:
-	if not database.has_component(component_id):
-		push_warning("Cannot equip unknown component.")
+	var component: Dictionary = (
+		database.get_component(component_id)
+	)
+
+	if component.is_empty():
+		push_warning(
+			"Unknown component: " + component_id
+		)
 		return false
 
-	var component := database.get_component(component_id)
-	var category := str(component.get("category", ""))
+	var category: String = str(
+		component.get("category", "")
+	)
 
 	if not equipped_components.has(category):
-		push_warning("Unsupported category: " + category)
+		push_warning(
+			"Unknown component category: " + category
+		)
 		return false
 
 	equipped_components[category] = component_id
 
 	spacecraft_updated.emit(get_ship_stats())
 
-	print("Equipped: ", component.get("name", component_id))
+	return true
+
+
+func unequip_component(category: String) -> bool:
+	if not equipped_components.has(category):
+		return false
+
+	equipped_components[category] = ""
+
+	spacecraft_updated.emit(get_ship_stats())
 
 	return true
 
 
-func get_equipped_component(category: String) -> Dictionary:
-	if not equipped_components.has(category):
-		return {}
+func clear_equipment() -> void:
+	for category in CATEGORIES:
+		equipped_components[category] = ""
 
-	var component_id := str(equipped_components[category])
+	spacecraft_updated.emit(get_ship_stats())
 
-	return database.get_component(component_id)
+
+func get_equipped_component(
+	category: String
+) -> String:
+	return str(
+		equipped_components.get(category, "")
+	)
+
+
+func get_equipped_components() -> Dictionary:
+	return equipped_components.duplicate(true)
+
+
+func get_equipped_count() -> int:
+	var count: int = 0
+
+	for category in CATEGORIES:
+		if not get_equipped_component(
+			category
+		).is_empty():
+			count += 1
+
+	return count
+
+
+func get_missing_categories() -> Array[String]:
+	var missing: Array[String] = []
+
+	for category in CATEGORIES:
+		if get_equipped_component(
+			category
+		).is_empty():
+			missing.append(category)
+
+	return missing
+
+
+func is_ship_complete() -> bool:
+	return get_missing_categories().is_empty()
 
 
 func get_ship_stats() -> Dictionary:
-	var total_mass := BASE_STRUCTURE_MASS_KG
-	var total_power := BASE_SYSTEM_POWER_W
-	var total_cost := BASE_STRUCTURE_COST
+	# All component statistics start at zero.
+	var stats: Dictionary = {
+		"mass_kg": 0.0,
+		"power_w": 0.0,
+		"cost_credits": 0.0,
+		"battery_wh": 0.0,
+		"solar_generation_w": 0.0,
+		"science_score": 0.0,
+		"science_data_mb_per_min": 0.0,
+		"downlink_mb_per_min": 0.0,
+		"data_storage_mb": 0.0,
+		"propellant_kg": 0.0,
+		"thrust_kn": 0.0,
+		"budget_remaining": MAX_BUDGET,
+		"within_budget": true,
+		"equipped_count": 0,
+		"total_slots": CATEGORIES.size(),
+		"complete": false,
+		"missing_categories": []
+	}
 
-	var battery_capacity := 0.0
-	var solar_generation := 0.0
-	var science_score := 0.0
-	var science_data_rate := 0.0
-	var downlink_rate := 0.0
-	var propellant_mass := 0.0
-	var engine_thrust := 0.0
+	var summed_keys: Array[String] = [
+		"mass_kg",
+		"power_w",
+		"cost_credits",
+		"battery_wh",
+		"solar_generation_w",
+		"science_score",
+		"science_data_mb_per_min",
+		"downlink_mb_per_min",
+		"data_storage_mb",
+		"propellant_kg",
+        "thrust_kn"
+	]
 
-	for category in equipped_components:
-		var component := get_equipped_component(category)
+	for category in CATEGORIES:
+		var component_id: String = (
+			get_equipped_component(category)
+		)
+
+		if component_id.is_empty():
+			continue
+
+		var component: Dictionary = (
+			database.get_component(component_id)
+		)
 
 		if component.is_empty():
 			continue
 
-		total_mass += float(component.get("mass_kg", 0))
-		total_power += float(component.get("power_w", 0))
-		total_cost += float(component.get("cost_credits", 0))
+		for key in summed_keys:
+			stats[key] = (
+				float(stats[key])
+				+ float(component.get(key, 0.0))
+			)
 
-		battery_capacity += float(
-			component.get("battery_wh", 0)
-		)
+	# Data storage is treated as an optional system
+	# capacity provided by components or later upgrades.
+	stats["budget_remaining"] = (
+		MAX_BUDGET
+		- float(stats["cost_credits"])
+	)
 
-		solar_generation += float(
-			component.get("solar_generation_w", 0)
-		)
+	stats["within_budget"] = (
+		float(stats["cost_credits"])
+		<= MAX_BUDGET
+	)
 
-		science_score += float(
-			component.get("science_score", 0)
-		)
+	stats["equipped_count"] = (
+		get_equipped_count()
+	)
 
-		science_data_rate += float(
-			component.get("data_mb_per_min", 0)
-		)
+	stats["missing_categories"] = (
+		get_missing_categories()
+	)
 
-		downlink_rate += float(
-			component.get("downlink_mb_per_min", 0)
-		)
+	stats["complete"] = (
+		is_ship_complete()
+	)
 
-		propellant_mass += float(
-			component.get("propellant_kg", 0)
-		)
-
-		engine_thrust += float(
-			component.get("thrust_kn", 0)
-		)
-
-	var remaining_budget := MAX_BUDGET - total_cost
-
-	return {
-		"mass_kg": total_mass,
-		"power_w": total_power,
-		"cost_credits": total_cost,
-		"budget_remaining": remaining_budget,
-		"battery_wh": battery_capacity,
-		"solar_generation_w": solar_generation,
-		"science_score": science_score,
-		"science_data_mb_per_min": science_data_rate,
-		"downlink_mb_per_min": downlink_rate,
-		"data_storage_mb": BASE_DATA_STORAGE_MB,
-		"propellant_kg": propellant_mass,
-		"thrust_kn": engine_thrust,
-		"within_budget": total_cost <= MAX_BUDGET
-	}
-
-
-func print_ship_stats() -> void:
-	var stats := get_ship_stats()
-
-	print("")
-	print("===================================")
-	print("       SPACE VAULT SHIP STATS      ")
-	print("===================================")
-
-	print("Total Mass: ", stats["mass_kg"], " kg")
-	print("Power Consumption: ", stats["power_w"], " W")
-	print("Battery: ", stats["battery_wh"], " Wh")
-	print("Solar Generation: ", stats["solar_generation_w"], " W")
-	print("Total Cost: ", stats["cost_credits"], " credits")
-	print("Budget Remaining: ", stats["budget_remaining"])
-	print("Science Score: ", stats["science_score"])
-	print("Science Data: ", stats["science_data_mb_per_min"], " MB/min")
-	print("Downlink: ", stats["downlink_mb_per_min"], " MB/min")
-	print("Data Storage: ", stats["data_storage_mb"], " MB")
-	print("Propellant: ", stats["propellant_kg"], " kg")
-	print("Engine Thrust: ", stats["thrust_kn"], " kN")
-	print("Within Budget: ", stats["within_budget"])
-
-	print("===================================")
-	print("")
+	return stats
