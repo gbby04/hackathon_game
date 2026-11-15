@@ -16,6 +16,9 @@ func _ready():
 func _physics_process(delta):
 	# 1. Get the player's input (returns a Vector2 like (1, 0) for right)
 	var input_dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	# Freeze movement while a dialogue balloon is on screen
+	if get_tree().get_nodes_in_group("dialogue_balloon").size() > 0:
+		return
 	
 	# 2. Apply the movement
 	velocity = input_dir * speed

@@ -1,11 +1,13 @@
-~ start
-Joe looking at a finished space battle
-Joe Peng: Finally, I can go home
-Suddenly, 4 scientists intervene
+~ intro_part1
+Joe Peng: Finally, I can go home.
+=> END
+
+~ intro_ambush
 Ahmed: Not so fast! You're not going anywhere!
 Niq: Guys, stop his ship!
-All scientists rush to stop Joe from going anywhere. Niq knocks him out.
-When Joe awake, his ship is stripped from important parts
-Joe Peng: Ughh...What happened? My ship is stripped apart! 
-Joe Peng: Those scientists stoled it!
+=> END
+
+~ intro_wakeup
+Joe Peng: Ughh... What happened? My ship is stripped apart!
+Joe Peng: Those scientists stole it!
 => END
